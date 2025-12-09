@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Assistant — Research Viewer</title>
+
+<!-- Markdown renderer -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f3f4f6;
+    --panel: #ffffff;
+    --muted: #6b7280;
+    --accent: #6d28d9;
+    --border: #e5e7eb;
+    --radius: 14px;
+  }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, Arial;
+    background: var(--bg);
+    color: #111827;
+  }
+
+  .app {
+    display: flex;
+    height: 100vh;
+  }
+
+  /* ------------------ SIDEBAR -------------------- */
+  .left {
+    width: 340px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+  }
+
+  .left h2 {
+    font-size: 18px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+
+  .section {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .input-row input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+  }
+
+  button {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: #e5e7eb;
+    color: #111;
+  }
+
+  /* ------------------ RIGHT SIDE -------------------- */
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .bubble {
+    max-width: 80%;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    font-size: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  }
+
+  .bubble.user {
+    background: #dbeafe;
+    align-self: flex-end;
+  }
+
+  .bubble.ai {
+    background: #ffffff;
+    align-self: flex-start;
+  }
+
+  /* Markdown styling */
+  .md p { margin: 0 0 8px; }
+  .md pre {
+    background: #1f2937;
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    overflow-x: auto;
+  }
+  .md code {
+    background: #e5e7eb;
+    padding: 2px 5px;
+    border-radius: 5px;
+  }
+  .md h1, .md h2, .md h3 { margin-top: 12px; }
+
+  /* footer input */
+  .panel {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    display: flex;
+    gap: 12px;
+  }
+  .panel input {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-size: 15px;
+  }
+
+  /* Sidebar lists */
+  .source-item, .tool-item {
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #fff;
+    margin-bottom: 10px;
+  }
+  .small { font-size: 13px; color: var(--muted); }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="left">
+    <div class="section">
+      <h2>API Settings</h2>
+      <div class="input-row"><input id="apiUrl" type="text" value="http://127.0.0.1:8000/chat/ask" /></div>
+      <div class="input-row"><input id="chatId" type="text" placeholder="chat_id" value="" /></div>
+      <div class="input-row"><input id="token" type="password" placeholder="Bearer token" /></div>
+
+      <div style="display:flex; gap:8px;">
+        <button id="btnSend" class="btn-primary">Send</button>
+        <button id="btnClear" class="btn-secondary">Clear</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Last Request</h2>
+      <div id="meta" class="small muted">No requests yet</div>
+    </div>
+
+    <div class="section">
+      <h2>🔗 Sources</h2>
+      <div id="sourcesList"></div>
+    </div>
+
+    <div class="section">
+      <h2>🧰 Tools</h2>
+      <div id="toolsList"></div>
+    </div>
+
+  </div>
+
+  <!-- CHAT AREA -->
+  <div class="right">
+    <div id="messages"></div>
+
+    <div class="panel">
+      <input id="queryInput" placeholder="Ask something…" />
+      <button id="sendBtn" class="btn-primary">Ask</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* KEEPING your full JS logic, only adding markdown rendering via marked() */
+
+function renderMarkdownInto(element, text) {
+  element.innerHTML = marked.parse(text);
+  element.classList.add("md");
+}
+
+function appendBubble(role, text, meta = null) {
+  const div = document.createElement("div");
+  div.className = "bubble " + (role === "user" ? "user" : "ai");
+
+  if (text) {
+    const md = document.createElement("div");
+    renderMarkdownInto(md, text);
+    div.appendChild(md);
+  }
+
+  if (meta) {
+    const m = document.createElement("div");
+    m.className = "small";
+    m.style.marginTop = "10px";
+    m.textContent = meta;
+    div.appendChild(m);
+  }
+
+  document.getElementById("messages").appendChild(div);
+  div.scrollIntoView({ behavior: "smooth" });
+}
+
+/* ---- The rest of your JS stays EXACTLY same ---- */
+/* I will only modify places that insert content → wrap them in markdown renderer */
+
+const apiUrlEl = document.getElementById("apiUrl");
+const chatIdEl = document.getElementById("chatId");
+const tokenEl = document.getElementById("token");
+const btnSend = document.getElementById("btnSend");
+const btnClear = document.getElementById("btnClear");
+const sendBtn = document.getElementById("sendBtn");
+const queryInput = document.getElementById("queryInput");
+const messagesEl = document.getElementById("messages");
+const metaEl = document.getElementById("meta");
+const sourcesList = document.getElementById("sourcesList");
+const toolsList = document.getElementById("toolsList");
+
+function clearPanels() {
+  messagesEl.innerHTML = "";
+  sourcesList.innerHTML = "";
+  toolsList.innerHTML = "";
+  metaEl.textContent = "No requests yet";
+}
+
+function tryParseStrAsJson(str) {
+  if (!str || typeof str !== "string") return null;
+  str = str.trim();
+  if (!(str.startsWith("{") || str.startsWith("["))) return null;
+  try { return JSON.parse(str); } catch {}
+  try { return JSON.parse(str.replace(/\\"/g, '"')); } catch {}
+  return null;
+}
+
+function renderResponseBody(apiResponse) {
+  const resp = apiResponse?.response || apiResponse;
+  if (!resp || !Array.isArray(resp.messages)) {
+    appendBubble("ai", "Invalid response");
+    return;
+  }
+
+  for (const m of resp.messages) {
+    const type = (m.type || m.role || "").toLowerCase();
+    let content = m.content || "";
+    const parsed = tryParseStrAsJson(content);
+
+    if (type === "assistant" || type === "ai") {
+      if (parsed?.markdown) appendBubble("ai", parsed.markdown);
+      else appendBubble("ai", content);
+      continue;
+    }
+
+    if (type === "user" || type === "human") {
+      appendBubble("user", content);
+      continue;
+    }
+
+    if (type === "tool" || m.name) {
+      let toolName = m.name || "tool";
+
+      const block = document.createElement("div");
+      block.className = "tool-item";
+      block.innerHTML = `<strong>${toolName}</strong>`;
+      toolsList.appendChild(block);
+
+      if (parsed?.markdown) appendBubble("ai", parsed.markdown);
+
+      if (Array.isArray(parsed?.results)) {
+        for (const r of parsed.results) {
+          const node = document.createElement("div");
+          node.className = "source-item";
+          node.innerHTML = `
+            <div><strong>${r.title || r.url}</strong></div>
+            <div class="small">${r.summary || ""}</div>
+          `;
+          sourcesList.appendChild(node);
+        }
+      }
+      continue;
+    }
+  }
+
+  metaEl.textContent = apiResponse.timestamp || "Received.";
+}
+
+async function callApi(query) {
+  const url = apiUrlEl.value;
+  const chat_id = chatIdEl.value;
+  const token = tokenEl.value;
+
+  metaEl.textContent = "Sending…";
+
+  const res = await fetch(`${url}?chat_id=${chat_id}&query=${encodeURIComponent(query)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: "Bearer " + token } : {})
+    }
+  });
+
+  const data = await res.json();
+  renderResponseBody(data);
+}
+
+sendBtn.onclick = btnSend.onclick = async () => {
+  const q = queryInput.value;
+  if (!q) return;
+  appendBubble("user", q);
+  await callApi(q);
+};
+
+btnClear.onclick = clearPanels;
+
+queryInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+appendBubble("ai", "✨ **Ready!** Ask a question to begin.");
+</script>
+
+</body>
+</html>

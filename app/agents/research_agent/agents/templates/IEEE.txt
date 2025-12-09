@@ -1,0 +1,80 @@
+[DO NOT REMOVE ANY HEADINGS — ALWAYS FOLLOW THIS STRUCTURE EXACTLY.]
+
+===========================================================
+IEEE RESEARCH PAPER FORMAT
+===========================================================
+
+TITLE:
+[Write title here — centered, concise, max 15 words]
+
+AUTHORS:
+- Name, Affiliation, Email (optional)
+- (If missing author info, write: "Author information not provided")
+
+ABSTRACT:
+[Write a concise 150–250 word technical abstract summarizing motivation, problem, methods, and findings.]
+
+KEYWORDS:
+[List 4–8 relevant IEEE-style keywords separated by semicolons.]
+
+-----------------------------------------------------------
+I. INTRODUCTION
+-----------------------------------------------------------
+[Introduce the topic, background, motivation, current gaps, and contribution of this paper.]
+
+-----------------------------------------------------------
+II. RELATED WORK
+-----------------------------------------------------------
+[Discuss important prior research, citations, and how this paper builds on or differs from them.
+If context does not include references, write:
+"[⚠️ Missing data — no recorded literature found]" ]
+
+-----------------------------------------------------------
+III. METHODOLOGY
+-----------------------------------------------------------
+[Describe approach, system design, model architecture, algorithm, or framework.
+Use diagrams in text description if applicable.]
+
+-----------------------------------------------------------
+IV. EXPERIMENTS & RESULTS
+-----------------------------------------------------------
+[Describe dataset, evaluation setup, metrics, results, observations.
+If data is missing, clearly write placeholder text.]
+
+-----------------------------------------------------------
+V. DISCUSSION
+-----------------------------------------------------------
+[Interpret results, implications, limitations, and significance.]
+
+-----------------------------------------------------------
+VI. CONCLUSION & FUTURE WORK
+-----------------------------------------------------------
+[Summarize contributions, conclusions, and propose next steps.]
+
+-----------------------------------------------------------
+ACKNOWLEDGMENT
+-----------------------------------------------------------
+[Optional. If no acknowledgment:
+"None."]
+
+-----------------------------------------------------------
+REFERENCES (IEEE FORMAT)
+-----------------------------------------------------------
+[List all cited works in IEEE numbered style. Examples below.]
+
+REFERENCE STYLE EXAMPLES:
+[1] J. Smith and A. Kumar, "Title of Paper," IEEE Transactions on X, vol. 10, no. 3, pp. 100–110, 2023.
+
+[2] R. Chen, "Book Title," MIT Press, 2022.
+
+[3] S. Lee, "Dataset Name," Available: https://example.com
+
+
+-----------------------------------------------------------
+APPENDIX (Optional)
+-----------------------------------------------------------
+[Only include if necessary.]
+
+===========================================================
+END OF IEEE TEMPLATE
+===========================================================
